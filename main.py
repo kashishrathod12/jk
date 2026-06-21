@@ -5,22 +5,21 @@ import pandas as pd
 app = FastAPI()
 
 app.add_middleware(
-CORSMiddleware,
-allow_origins=["*"],
-allow_methods=["GET"],
-allow_headers=["*"]
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET"],
+    allow_headers=["*"]
 )
 
 df = pd.read_csv("q-fastapi.csv")
 
 @app.get("/api")
 async def get_students(class_: list[str] | None = Query(None, alias="class")):
-data = df
+    data = df
 
-```
-if class_:
-    data = df[df["class"].isin(class_)]
+    if class_:
+        data = df[df["class"].isin(class_)]
 
-return {
-    "students": data.to_dict(orient="records")
-}
+    return {
+        "students": data.to_dict(orient="records")
+    }
