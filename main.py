@@ -7,69 +7,62 @@ import pandas as pd
 app = FastAPI()
 
 app.add_middleware(
-CORSMiddleware,
-allow_origins=["*"],
-allow_methods=["*"],
-allow_headers=["*"]
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"]
 )
-
-# ---------- CSV API ----------
 
 df = pd.read_csv("q-fastapi.csv")
 
 @app.get("/api")
 async def get_students(
-class_: Optional[List[str]] = Query(None, alias="class")
+    class_: Optional[List[str]] = Query(None, alias="class")
 ):
-data = df
+    data = df
 
+    if class_:
+        data = df[df["class"].isin(class_)]
 
-if class_:
-    data = df[df["class"].isin(class_)]
-
-return {
-    "students": data.to_dict(orient="records")
-}
-
-
-# ---------- Sentiment API ----------
+    return {
+        "students": data.to_dict(orient="records")
+    }
 
 class SentimentRequest(BaseModel):
-sentences: List[str]
+    sentences: List[str]
 
 @app.post("/sentiment")
 async def sentiment(req: SentimentRequest):
-positive = [
-"love","great","excellent","amazing","awesome",
-"good","happy","fantastic","wonderful","best",
-"like","enjoy","nice","perfect"
-]
+    positive = {
+        "love", "great", "excellent", "amazing", "awesome",
+        "good", "happy", "fantastic", "wonderful", "best",
+        "like", "enjoy", "nice", "perfect"
+    }
 
+    negative = {
+        "hate", "terrible", "bad", "awful", "worst",
+        "sad", "angry", "disappointed", "horrible",
+        "poor", "upset"
+    }
 
-negative = [
-    "hate","terrible","bad","awful","worst",
-    "sad","angry","disappointed","horrible",
-    "poor","upset"
-]
+    results = []
 
-results = []
+    for sentence in req.sentences:
+        text = sentence.lower()
 
-for sentence in req.sentences:
-    text = sentence.lower()
+        pos = sum(1 for word in positive if word in text)
+        neg = sum(1 for word in negative if word in text)
 
-    pos = sum(word in text for word in positive)
-    neg = sum(word in text for word in negative)
+        if pos > neg:
+            label = "happy"
+        elif neg > pos:
+            label = "sad"
+        else:
+            label = "neutral"
 
-    if pos > neg:
-        label = "happy"
-    elif neg > pos:
-        label = "sad"
-    else:
-        label = "neutral"
+        results.append({
+            "sentence": sentence,
+            "sentiment": label
+        })
 
-    results.append({
-        "sentence": sentence,
-        "sentiment": label
-    })
-
-return {"results": results}
+    return {"results": results}
