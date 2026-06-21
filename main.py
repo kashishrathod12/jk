@@ -1,25 +1,54 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import pandas as pd
+from pydantic import BaseModel
+from typing import List
 
 app = FastAPI()
 
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET"],
-    allow_headers=["*"]
+CORSMiddleware,
+allow_origins=["*"],
+allow_methods=["*"],
+allow_headers=["*"]
 )
 
-df = pd.read_csv("q-fastapi.csv")
+class SentimentRequest(BaseModel):
+sentences: List[str]
 
-@app.get("/api")
-async def get_students(class_: list[str] | None = Query(None, alias="class")):
-    data = df
+happy_words = {
+"love", "great", "excellent", "amazing", "awesome",
+"good", "happy", "fantastic", "wonderful", "best",
+"like", "enjoy"
+}
 
-    if class_:
-        data = df[df["class"].isin(class_)]
+sad_words = {
+"hate", "terrible", "bad", "awful", "worst",
+"sad", "angry", "disappointed", "horrible",
+"poor", "upset"
+}
 
-    return {
-        "students": data.to_dict(orient="records")
-    }
+@app.post("/sentiment")
+async def sentiment(req: SentimentRequest):
+results = []
+
+```
+for sentence in req.sentences:
+    text = sentence.lower()
+
+    happy_score = sum(1 for w in happy_words if w in text)
+    sad_score = sum(1 for w in sad_words if w in text)
+
+    if happy_score > sad_score:
+        label = "happy"
+    elif sad_score > happy_score:
+        label = "sad"
+    else:
+        label = "neutral"
+
+    results.append({
+        "sentence": sentence,
+        "sentiment": label
+    })
+
+return {"results": results}
+```
