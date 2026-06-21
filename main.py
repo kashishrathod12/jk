@@ -6,26 +6,26 @@ from typing import List
 app = FastAPI()
 
 app.add_middleware(
-CORSMiddleware,
-allow_origins=["*"],
-allow_methods=["*"],
-allow_headers=["*"]
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"]
 )
 
 class SentimentRequest(BaseModel):
     sentences: List[str]
 
-    happy_words = {
+happy_words = {
     "love", "great", "excellent", "amazing", "awesome",
     "good", "happy", "fantastic", "wonderful", "best",
     "like", "enjoy"
-    }
+}
 
-    sad_words = {
+sad_words = {
     "hate", "terrible", "bad", "awful", "worst",
     "sad", "angry", "disappointed", "horrible",
     "poor", "upset"
-    }
+}
 
 @app.post("/sentiment")
 async def sentiment(req: SentimentRequest):
